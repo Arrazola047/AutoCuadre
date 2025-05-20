@@ -5,3 +5,4 @@ Notebook/
 __pycache__/
 *.pyc
 *.pyo
+proto.py

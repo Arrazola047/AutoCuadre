@@ -70,3 +70,17 @@ finally:
 # Guardamos los resultados en los CSV correspondientes
 map.to_csv('cMappingTableActive.csv', sep=';', index=False)
 off.to_csv('cMappingTableOFF.csv', sep=';', index=False)
+
+
+
+# def SQLEmpty(cnxn: any, URLid: list, where: str):
+#     #Query Data
+#     tables = ','.join([f"'_Result{i}'" for i in URLid])
+#     query = text(f"""SELECT 
+# 	                OBJECT_NAME(p.object_id) AS TableName,
+# 	                SUM(p.row_count) AS TotalRows
+#                     FROM sys.dm_db_partition_stats p
+#                     WHERE OBJECT_NAME(p.object_id) IN ({tables})
+#                     GROUP BY OBJECT_NAME(p.object_id)""")
+#     print(query)
+#     return URLid

@@ -5,6 +5,7 @@ from libs.SQLFunctions import *
 from libs.ICMFunctions import *
 from colorama import Fore, Style
 from dotenv import load_dotenv
+from sqlalchemy import create_engine
 from libs.custom import *
 import configparser
 import pandas as pd 
@@ -37,15 +38,17 @@ bearerToken = os.environ.get('bearerToken')
 model = os.environ.get('model')
 apiurl = os.environ.get('apiurl')
 
-#Variables de Construccion de Query
-queryAño = '2024'
-periodoType = 'Weeks'
-periodoInicial = '10'
-periodoFinal = '30'
+## Variables de Configuracion
+raw = config['BOOL'].getboolean('raw')
+lastDate = config['DATE']['ultimaComprobacion']
+queryAño = config['VAR']['queryAño']
+periodoType = config['VAR']['periodoType']
+periodoInicial = config['VAR']['periodoInicial']
+periodoFinal = config['VAR']['periodoFinal']
 URLid = map['ResultURLid'].tolist()
 # URLid = ['119']
-limit = 900
 qEmpty = []
+limit = 900
 
 #Variables de Query
 filtroPeriodo = [f"{queryAño}, {periodoType[:-1 if periodoType.endswith('s') else periodoType]} {str(i).zfill(2)}" for i in range(int(periodoInicial), int(periodoFinal) + 1)]
@@ -53,13 +56,7 @@ where = f'WHERE \"{periodoType}\" IN ({str(filtroPeriodo).strip("[]")})'
 order = 'ORDER BY \"PayeeID_\"'
 
 # #Variables de conexion a SQL
-conn_str = (
-        r'DRIVER={ODBC Driver 17 for SQL Server};'
-        r'SERVER='+ sqlServer + ';'
-        r'DATABASE='+ dataBase +';'
-        r'UID=' + uid + ';'
-        r'PWD=' + pwd + ';'
-)
+conn_str = (f"mssql+pyodbc://{uid}:{pwd}@{sqlServer}/{dataBase}?driver=ODBC+Driver+17+for+SQL+Server")
 cnxn = None
 
 ## Variables de Conexion a ICM
@@ -69,37 +66,20 @@ header = {
     "Model": model
 }
 
-## Variables de Configuracion
-raw = config['BOOL'].getboolean('raw')
-lastDate = config['DATE']['ultimaComprobacion']
-
 ######################### Conexion a SQL #########################
 try:
-    cnxn = SQLConnect(conn_str)
-    cursor = cnxn.cursor()
-    
-    #Obtener las tablas vacias
-    qEmpty = SQLEmpty(cursor,URLid, where)
+    cnxn = create_engine(conn_str)
 
     #Eliminar las tablas vacias de la lista
-    URLid = [x for x in URLid if x not in qEmpty]
+    URLid = SQLEmpty(cnxn,URLid, where)
 
-    # Obtener el header de las tablas
+    # Obtener el headery datos de la tabla
     for ids in URLid:
-        globals()[ids] = pd.DataFrame()
-        globals()[ids] = Getheader(cursor, ids)
-    
-    # Obtenemos los datos de las tablas
-    for ids in URLid:
-        globals()[ids] = SQLSearch(cursor, ids, limit, where, order, globals()[ids])
-    
-except db.Error as ex:
-    sqlstate = ex.args[0]
-    print(Fore.RED + "Error en la conexión SQL " + Style.RESET_ALL + str(sqlstate))
+        globals()[ids] = pd.DataFrame() 
+        globals()[ids] = SQLSearch(cnxn, ids, limit, where, order, globals()[ids])
 finally:
     if cnxn:
-        cursor.close()
-        cnxn.close()
+        cnxn.dispose()
         print(Fore.YELLOW + "Conexión SQL Cerrada" + Style.RESET_ALL + "\n")
 
 ######################### Peticion al API #########################
