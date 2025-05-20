@@ -1,14 +1,14 @@
 from libs.DataProcessFunctions import *
+from sqlalchemy import create_engine
+from colorama import Fore, Style
 from libs.PrintFunctions import *
 from libs.StoreFunctions import *
 from libs.SQLFunctions import *
 from libs.ICMFunctions import *
-from colorama import Fore, Style
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
 from libs.custom import *
 import configparser
-import pandas as pd 
+import pandas as pd
 
 ##################################### Definicion de Variables #####################################
 # Definicion de Rutas
@@ -82,7 +82,7 @@ finally:
     if cnxn:
         cnxn.dispose()
         print("\n" + Fore.YELLOW + "Conexión SQL Cerrada" + Style.RESET_ALL + "\n")
-        print(f"{"#" * 50}\n")
+        print(f"{Fore.LIGHTBLACK_EX}{"#" * 50}\n")
 
 ######################### Peticion al API #########################
 print(Fore.YELLOW + "Conectando a la API de ICM..." + Style.RESET_ALL)
@@ -113,9 +113,10 @@ for id in URLid:
 
     #Eliminamos las tablas vacias (Resultantes del query a ICM) para no procesarlas
     URLid = [x for x in URLid if x not in qEmpty]
+    print(f"{Fore.GREEN}Peticiones a ICM Finalizadas{Style.RESET_ALL}"+ "\n")
+    print(f"{Fore.LIGHTBLACK_EX}{"#" * 50}\n")
 
 ########################## Procesamiento de DataFrames #########################
-print("\n" + Fore.YELLOW + "Procesando DataFrames..." + Style.RESET_ALL)
 for id in URLid:
     icm = id + 'ICM'
     #Definicion de Existencias y Variables
@@ -154,6 +155,6 @@ LimpiaDirectorio(output_dir)
 for id in URLid:
     #Creamos subcarpetas
     route = CreaSubcarpetas(output_dir, id)
-
     #Almacenamos los resultados
     AlmacenaResultados(globals()[id], globals()[id + 'ICM'], route, id, raw)
+print(Fore.GREEN + "Resultados almacenados en ../Results" + Style.RESET_ALL)
