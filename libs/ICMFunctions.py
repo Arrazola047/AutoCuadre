@@ -1,18 +1,19 @@
 from colorama import Fore, Style
-import pandas as pd 
 import requests as rq
+import pandas as pd 
+import json
 import os
 import re
 
 cMap_path = os.path.join(os.path.dirname(__file__), '..', 'utils', 'cMappingTableActive.csv')
+sqlTypeMap = os.path.join(os.path.dirname(__file__), '..', 'utils', 'sqlTypeMap.json')
 cMap = pd.read_csv(os.path.abspath(cMap_path), sep=';', dtype=str)
 
-def getPayload(id: str, where: str, order: str, limit: int):
+def getPayload(id: str, where: str, order: str):
     data = {
-        "queryString": f"SELECT * FROM \"_Result{id}\" {where} {order} LIMIT {limit}",
-        "retreiveFromDataServer":"QUERY_SQL",
+        "queryString": f"SELECT * FROM \"_Result{id}\" {where} {order}",
         "offset": 0,
-        "limit": limit
+        "limit": 0
     }
     return data
 
@@ -39,25 +40,22 @@ def construyeDataFrame(jResponse: any, df: pd.DataFrame):
     columns = [col['name'] for col in jResponse['columnDefinitions'][0]]
     types = [col['type'] for col in jResponse['columnDefinitions'][0]]
 
+    #Definimos un diccionario para los tipos de datos
+    with open(sqlTypeMap, 'r') as f:
+        type_map = json.load(f)
+
     #Definimos el DataFrame y sus tipos de datos
-    df = pd.DataFrame(columns = columns)
-    for nombre, tipo in zip(columns, types):
-        if tipo == 'Int':
-            df[nombre] = df[nombre].astype('Int64')
-        elif tipo == 'String':
-            df[nombre] = df[nombre].astype('string')
-        elif tipo == 'Decimal':
-            df[nombre] = df[nombre].astype('float64')
-    
+    type_dict = {col: type_map.get(typ.lower(), 'object') for col, typ in zip(columns, types)}
+
     #Llenamos el DataFrame con los datos de la respuesta
-    for row in jResponse['data'][0]:
-        df.loc[len(df)] = row
-    
+    df = pd.DataFrame(jResponse['data'][0], columns=columns).astype(type_dict)
+
     #Eliminamos la columna _ResultID
     df = df.drop(columns=['_ResultID'])
 
     #Definimos un arreglo que contiene los nombres de las columnas que se concatenaran
     concatFields = []
+
     #Recorremos las columnas para elegir los campos que se concatenaran
     for col in jResponse['columnDefinitions'][0]:
         if col['type'] in ['String', 'Date'] and col['name'].lower() != 'value':

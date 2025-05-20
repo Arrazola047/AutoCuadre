@@ -45,9 +45,7 @@ periodoType = 'Weeks'
 periodoInicial = '10'
 periodoFinal = '30'
 URLid = map['ResultURLid'].tolist()
-# URLid = ['119']
 qEmpty = []
-limit = 900
 
 #Variables de Query
 filtroPeriodo = [f"{queryYear}, {periodoType[:-1 if periodoType.endswith('s') else periodoType]} {str(i).zfill(2)}" for i in range(int(periodoInicial), int(periodoFinal) + 1)]
@@ -66,28 +64,37 @@ header = {
 }
 
 ######################### Conexion a SQL #########################
-try:
+try: 
     cnxn = create_engine(conn_str)
-    print(Fore.GREEN + "Connected to SQL Server" + Style.RESET_ALL)
+    if cnxn: 
+        print(Fore.GREEN + "Conexión SQL Establecida..." + Style.RESET_ALL+ "\n")
 
-    #Eliminar las tablas vacias de la lista
+    #Obtener las tablas con datos
     URLid = SQLEmpty(cnxn,URLid, where)
-
-    # Obtener el header y datos de la tabla
+    
+    print(Fore.GREEN + "\nObteniendo Registros..." + Style.RESET_ALL)
+    # Obtenemos los datos de las tablas
     for ids in URLid:
-        globals()[ids] = pd.DataFrame() 
-        globals()[ids] = SQLSearch(cnxn, ids, limit, where, order, globals()[ids])
+        globals()[ids] = pd.DataFrame()
+        globals()[ids] = SQLSearch(cnxn, ids, where, order, globals()[ids])
+        print(f"{Fore.BLUE}{re.match(r'^[^ ]*', (cMap.loc[cMap['ResultURLid'] == str(ids), 'Configuration'].values)[0]).group()} - {Style.RESET_ALL}{len(globals()[ids])} Registros obtenidos")
 finally:
     if cnxn:
         cnxn.dispose()
-        print(Fore.YELLOW + "Conexión SQL Cerrada" + Style.RESET_ALL + "\n")
+        print("\n" + Fore.YELLOW + "Conexión SQL Cerrada" + Style.RESET_ALL + "\n")
+        print(f"{"#" * 50}\n")
 
 ######################### Peticion al API #########################
 print(Fore.YELLOW + "Conectando a la API de ICM..." + Style.RESET_ALL)
 for id in URLid:
+    #Generamos el nombre de los DF de ICM
     icm = id + 'ICM'
+
+    #Generamos el DF
     globals()[icm] = pd.DataFrame()
-    data = getPayload(id, where, order, limit)
+
+    #Generamos el payload para la peticion
+    data = getPayload(id, where, order)
     # Peticion al API y Manejo de Respuesta
     response =  getResponse(apiurl, header, data, id)
     
@@ -98,13 +105,13 @@ for id in URLid:
     if jResponse.empty or response.status_code != 200:
         print(Fore.RED + "Error al ejecutar el Query" + Style.RESET_ALL)
     elif len(jResponse.data[0]) == 0:
-        print(Fore.RED + "ALERTA!!! - No se encontraron datos en ICM para los periodos especificados" + Style.RESET_ALL)
+        print(f"{Fore.RED}ALERTA!!! - No se encontraron datos en ICM para los periodos especificados {Style.RESET_ALL}")
         qEmpty.append(id)
         ### AGREGAR LOGICA PARA ALTERAR UNA VARIABLE EN CONFIG PARA EN OTRO CODIGO AUTOMATIZAR LA SINCRONIZACION DE TABLAS VACIAS A LA API 
     else: 
         globals()[icm] = construyeDataFrame(jResponse, globals()[icm])
 
-    #Eliminamos las tablas vacias (Resultantes del query a ICM)
+    #Eliminamos las tablas vacias (Resultantes del query a ICM) para no procesarlas
     URLid = [x for x in URLid if x not in qEmpty]
 
 ########################## Procesamiento de DataFrames #########################
@@ -123,17 +130,17 @@ for id in URLid:
     # Ejecucion de redondeo estricto
     globals()[id] = HardRound(globals()[id])
 print(Fore.GREEN + "DataFrames procesados" + Style.RESET_ALL)
-########################## Impresión de Resultados #########################
-# id = URLid[0]
-campoPeriodo = ObtenerPeriodoREGEX(globals()[URLid[0]]) 
+# ########################## Impresión de Resultados #########################
+# # id = URLid[0]
+# campoPeriodo = ObtenerPeriodoREGEX(globals()[URLid[0]]) 
 
-#Impresion de Faltantes
-# for id in URLid:
-#     icm = id + 'ICM'
-#     ImprimeFaltantes(filtroPeriodo, campoPeriodo, globals()[id], globals()[icm], id)
-#     ImprimeCoincidencias(filtroPeriodo, campoPeriodo, globals()[id], id)
-#     ImprimeExcedentes(filtroPeriodo, campoPeriodo, globals()[icm], id)
-#     ImprimeGeneral(globals()[id], id)
+# #Impresion de Faltantes
+# # for id in URLid:
+# #     icm = id + 'ICM'
+# #     ImprimeFaltantes(filtroPeriodo, campoPeriodo, globals()[id], globals()[icm], id)
+# #     ImprimeCoincidencias(filtroPeriodo, campoPeriodo, globals()[id], id)
+# #     ImprimeExcedentes(filtroPeriodo, campoPeriodo, globals()[icm], id)
+# #     ImprimeGeneral(globals()[id], id)
     
 
 ########################## Almacenado de Resultados #########################

@@ -1,8 +1,9 @@
 Env/
-utils/
+*.csv
 test.py
 Notebook/
 __pycache__/
 *.pyc
 *.pyo
 proto.py
+test2.py
