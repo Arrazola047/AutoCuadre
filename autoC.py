@@ -13,7 +13,6 @@ import pandas as pd
 ##################################### Definicion de Variables #####################################
 # Definicion de Rutas
 base = os.path.dirname(os.path.abspath(__file__))
-# map = pd.read_csv(r'utils/cMappingTableActive.csv', sep=';', dtype=str)
 map = pd.read_csv(os.path.join(base, 'utils', 'cMappingTableActive.csv'), sep=';', dtype=str)
 dotenv_path = os.path.join(base, 'Env', '.Env')
 # output_dir = r'..\Resultados'
@@ -41,17 +40,17 @@ apiurl = os.environ.get('apiurl')
 ## Variables de Configuracion
 raw = config['BOOL'].getboolean('raw')
 lastDate = config['DATE']['ultimaComprobacion']
-queryAño = config['VAR']['queryAño']
-periodoType = config['VAR']['periodoType']
-periodoInicial = config['VAR']['periodoInicial']
-periodoFinal = config['VAR']['periodoFinal']
+queryYear = '2024'
+periodoType = 'Weeks'
+periodoInicial = '10'
+periodoFinal = '30'
 URLid = map['ResultURLid'].tolist()
 # URLid = ['119']
 qEmpty = []
 limit = 900
 
 #Variables de Query
-filtroPeriodo = [f"{queryAño}, {periodoType[:-1 if periodoType.endswith('s') else periodoType]} {str(i).zfill(2)}" for i in range(int(periodoInicial), int(periodoFinal) + 1)]
+filtroPeriodo = [f"{queryYear}, {periodoType[:-1 if periodoType.endswith('s') else periodoType]} {str(i).zfill(2)}" for i in range(int(periodoInicial), int(periodoFinal) + 1)]
 where = f'WHERE \"{periodoType}\" IN ({str(filtroPeriodo).strip("[]")})'
 order = 'ORDER BY \"PayeeID_\"'
 
@@ -69,11 +68,12 @@ header = {
 ######################### Conexion a SQL #########################
 try:
     cnxn = create_engine(conn_str)
+    print(Fore.GREEN + "Connected to SQL Server" + Style.RESET_ALL)
 
     #Eliminar las tablas vacias de la lista
     URLid = SQLEmpty(cnxn,URLid, where)
 
-    # Obtener el headery datos de la tabla
+    # Obtener el header y datos de la tabla
     for ids in URLid:
         globals()[ids] = pd.DataFrame() 
         globals()[ids] = SQLSearch(cnxn, ids, limit, where, order, globals()[ids])
@@ -122,18 +122,18 @@ for id in URLid:
 
     # Ejecucion de redondeo estricto
     globals()[id] = HardRound(globals()[id])
-
+print(Fore.GREEN + "DataFrames procesados" + Style.RESET_ALL)
 ########################## Impresión de Resultados #########################
 # id = URLid[0]
 campoPeriodo = ObtenerPeriodoREGEX(globals()[URLid[0]]) 
 
 #Impresion de Faltantes
-for id in URLid:
-    icm = id + 'ICM'
-    ImprimeFaltantes(filtroPeriodo, campoPeriodo, globals()[id], globals()[icm], id)
-    ImprimeCoincidencias(filtroPeriodo, campoPeriodo, globals()[id], id)
-    ImprimeExcedentes(filtroPeriodo, campoPeriodo, globals()[icm], id)
-    ImprimeGeneral(globals()[id], id)
+# for id in URLid:
+#     icm = id + 'ICM'
+#     ImprimeFaltantes(filtroPeriodo, campoPeriodo, globals()[id], globals()[icm], id)
+#     ImprimeCoincidencias(filtroPeriodo, campoPeriodo, globals()[id], id)
+#     ImprimeExcedentes(filtroPeriodo, campoPeriodo, globals()[icm], id)
+#     ImprimeGeneral(globals()[id], id)
     
 
 ########################## Almacenado de Resultados #########################
