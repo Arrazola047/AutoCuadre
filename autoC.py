@@ -82,7 +82,7 @@ finally:
     if cnxn:
         cnxn.dispose()
         print("\n" + Fore.YELLOW + "Conexión SQL Cerrada" + Style.RESET_ALL + "\n")
-        print(f"{Fore.LIGHTBLACK_EX}{"#" * 50}\n")
+        print(f"{Fore.LIGHTBLACK_EX}{"#" * 50}{Style.RESET_ALL}\n")
 
 ######################### Peticion al API #########################
 print(Fore.YELLOW + "Conectando a la API de ICM..." + Style.RESET_ALL)
@@ -113,8 +113,8 @@ for id in URLid:
 
     #Eliminamos las tablas vacias (Resultantes del query a ICM) para no procesarlas
     URLid = [x for x in URLid if x not in qEmpty]
-    print(f"{Fore.GREEN}Peticiones a ICM Finalizadas{Style.RESET_ALL}"+ "\n")
-    print(f"{Fore.LIGHTBLACK_EX}{"#" * 50}\n")
+print(f"{Fore.GREEN}Peticiones a ICM Finalizadas{Style.RESET_ALL}"+ "\n")
+print(f"{Fore.LIGHTBLACK_EX}{"#" * 50}{Style.RESET_ALL}\n")
 
 ########################## Procesamiento de DataFrames #########################
 for id in URLid:
