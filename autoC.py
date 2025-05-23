@@ -142,7 +142,6 @@ print(Fore.GREEN + "DataFrames procesados" + Style.RESET_ALL)
 # #     ImprimeCoincidencias(filtroPeriodo, campoPeriodo, globals()[id], id)
 # #     ImprimeExcedentes(filtroPeriodo, campoPeriodo, globals()[icm], id)
 # #     ImprimeGeneral(globals()[id], id)
-    
 
 ########################## Almacenado de Resultados #########################
 # NOTA IMPORTANTE!!!! 
