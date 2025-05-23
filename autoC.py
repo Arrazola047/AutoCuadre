@@ -11,20 +11,21 @@ import configparser
 import pandas as pd
 
 ##################################### Definicion de Variables #####################################
-# Definicion de Rutas
-base = os.path.dirname(os.path.abspath(__file__))
-map = pd.read_csv(os.path.join(base, 'utils', 'cMappingTableActive.csv'), sep=';', dtype=str)
-dotenv_path = os.path.join(base, 'Env', '.Env')
-# output_dir = r'..\Resultados'
-output_dir = os.path.join(base, '..', 'Resultados')
 
-### Carga de Varialbes de Entorno ###
-dotenv_path = os.path.join(base, 'Env', '.Env')
-load_dotenv(dotenv_path)
+Modelo = 'VARHNKCat'
 
 ### Carga de Variables de Configuracion ###
+base = os.path.dirname(os.path.abspath(__file__))
 config = configparser.ConfigParser()
 config.read(os.path.join(base, 'config', 'config.ini'))
+MapArchive = config[Modelo]['MapArchive']
+
+# Definicion de Rutas
+cMap = pd.read_csv(os.path.join(base, 'utils', MapArchive), sep=';', dtype=str)
+dotenv_path = os.path.join(base, 'EnvHNKCat', '.Env')
+load_dotenv(dotenv_path)
+output_dir = os.path.join(base, '..', 'Resultados')
+
 
 #Variables de Entorno SQL
 sqlServer = os.environ.get('sqlServer')
@@ -40,11 +41,11 @@ apiurl = os.environ.get('apiurl')
 ## Variables de Configuracion
 raw = config['BOOL'].getboolean('raw')
 lastDate = config['DATE']['ultimaComprobacion']
-queryYear = '2024'
-periodoType = 'Weeks'
-periodoInicial = '10'
-periodoFinal = '30'
-URLid = map['ResultURLid'].tolist()
+queryYear = config[Modelo]['queryYear']
+periodoType = config[Modelo]['periodoType']
+periodoInicial = config[Modelo]['periodoInicial']
+periodoFinal = config[Modelo]['periodoFinal']
+URLid = cMap['ResultURLid'].tolist()
 qEmpty = []
 
 #Variables de Query

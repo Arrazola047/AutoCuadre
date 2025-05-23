@@ -36,16 +36,18 @@ def SQLEmpty(cnxn: any, URLid: list, where: str):
     df = pd.read_sql(query, cnxn)
     #Copiamos el DataFrame para imprimir los registros que no tienen datos
     empty_list = df.loc[:, df.isna().all()].columns.tolist()
-    print(Fore.YELLOW + f"Los siguientes Calculos fueron descartados por no contener datos en los periodos especificados:" + Style.RESET_ALL)
-    for ids in empty_list:
-        print(f"{Fore.RED}{re.match(r'^[^ ]*', (cMap.loc[cMap['ResultURLid'] == str(ids), 'Configuration'].values)[0]).group()}")
-    # Eliminamos las columnas que no tienen datos
-    df = df.dropna(axis=1, how='all')
+    if empty_list.__len__() > 0:
+        print(Fore.YELLOW + f"Los siguientes Calculos fueron descartados por no contener datos en los periodos especificados:" + Style.RESET_ALL)
+        for ids in empty_list:
+            print(f"{Fore.RED}{re.match(r'^[^ ]*', (cMap.loc[cMap['ResultURLid'] == str(ids), 'Configuration'].values)[0]).group()}")
+        # Eliminamos los registros que no tienen datos
+        df = df.dropna(axis=1, how='all')
+    
     # Hacemos una lista con las columnas que tienen datos para posteriormente solo buscar en esas tablas 
     URLid = df.columns.tolist()
     #Imprimimos los calculos que se consultaran
     print("\n" + Fore.GREEN + "Se consultaran los siguientes Calculos: " + Style.RESET_ALL)
-    for ids in URLid:
-        print(f"{Fore.BLUE}{re.match(r'^[^ ]*', (cMap.loc[cMap['ResultURLid'] == str(ids), 'Configuration'].values)[0]).group()}{Style.RESET_ALL}")
+    # for ids in URLid:
+        # print(f"{Fore.BLUE}{re.match(r'^[^ ]*', (cMap.loc[cMap['ResultURLid'] == str(ids), 'Configuration'].values)[0]).group()}{Style.RESET_ALL}")
 
     return URLid

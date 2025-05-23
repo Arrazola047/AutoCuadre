@@ -17,7 +17,8 @@ def LimpiaDirectorio(dir: str):
             sh.rmtree(file_path)
 
 def CreaSubcarpetas(dir: str, id: str):
-    route = dir + r"\\" + re.match(r'^[^ ]*', (cMap.loc[cMap['ResultURLid'] == str(id), 'Configuration'].values)[0]).group() 
+    # route = dir + r"\\" + re.match(r'^[^ ]*', (cMap.loc[cMap['ResultURLid'] == str(id), 'Configuration'].values)[0]).group() 
+    route = dir + r"\\" + id
     os.makedirs(route, exist_ok=True)
     return route
 

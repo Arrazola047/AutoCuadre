@@ -20,7 +20,8 @@ def getPayload(id: str, where: str, order: str):
 def getResponse(apiurl: any, header: any, data: any, ids: str):
     response = rq.post(apiurl, headers = header, json = data)
     if response.status_code == 200:
-        print(re.match(r'^[^ ]*', (cMap.loc[cMap['ResultURLid'] == str(ids), 'Configuration'].values)[0]).group() + Fore.GREEN + " - Success! - " + Style.RESET_ALL + " Status Code: " + str(response.status_code))
+        # print(re.match(r'^[^ ]*', (cMap.loc[cMap['ResultURLid'] == str(ids), 'Configuration'].values)[0]).group() + Fore.GREEN + " - Success! - " + Style.RESET_ALL + " Status Code: " + str(response.status_code))
+        print("ok")
     elif response.status_code == 401:
         print(re.match(r'^[^ ]*', (cMap.loc[cMap['ResultURLid'] == str(ids), 'Configuration'].values)[0]).group() + Fore.YELLOW + " - Unauthorized - " + Style.RESET_ALL + "Status Code: " + str(response.status_code))
     elif response.status_code == 403:
