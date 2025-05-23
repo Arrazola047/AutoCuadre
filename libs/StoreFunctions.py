@@ -31,7 +31,7 @@ def LimpiaDataFrame(df: pd.DataFrame):
 
 def AlmacenaResultados(df: pd.DataFrame, icm: pd.DataFrame, route: str, ids: str, raw: bool):
     #Encontramos el nombre del incentivo 
-    calc = re.match(r'^[^ ]*', (cMap.loc[cMap['ResultURLid'] == str(ids), 'Configuration'].values)[0]).group()
+    # calc = re.match(r'^[^ ]*', (cMap.loc[cMap['ResultURLid'] == str(ids), 'Configuration'].values)[0]).group()
 
     #Si se solicita, limpiamos el DataFrame eliminando las columnas generadas en el cuadre
     if raw == False:
@@ -41,6 +41,6 @@ def AlmacenaResultados(df: pd.DataFrame, icm: pd.DataFrame, route: str, ids: str
         icm = LimpiaDataFrame(icm)
 
     #Almacenamos los resultados en la carpeta de resultados
-    df[(df['ExisteGRAL'] == False)].to_csv(route + r"\\" + calc + r' - EmpleadosFaltantesICM.csv', sep=',', index=False)
-    df[(df['CoincideSOFT'] == False) & (df['ExisteGRAL'] == True)].to_csv(route + r"\\" + calc + r' - EmpleadosValueIncorrecto.csv', sep=',', index=False)
-    icm[(icm['ExistePRD'] == False)].to_csv(route + r"\\" + calc + r' - EmpleadosExcedentesICM.csv', sep=',', index=False)
+    df[(df['ExisteGRAL'] == False)].to_csv(route + r"\\" + ids + r' - EmpleadosFaltantesICM.csv', sep=',', index=False)
+    df[(df['CoincideSOFT'] == False) & (df['ExisteGRAL'] == True)].to_csv(route + r"\\" + ids + r' - EmpleadosValueIncorrecto.csv', sep=',', index=False)
+    icm[(icm['ExistePRD'] == False)].to_csv(route + r"\\" + ids + r' - EmpleadosExcedentesICM.csv', sep=',', index=False)
