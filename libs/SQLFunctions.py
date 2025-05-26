@@ -1,10 +1,6 @@
 from colorama import Fore, Style
 import pandas as pd
-import os
 import re
-
-base = os.path.dirname(os.path.abspath(__file__))
-cMap = pd.read_csv(os.path.join(base,'..', 'utils', 'cMappingTableActive.csv'), sep=';', dtype=str)
 
 def SQLSearch(cnxn: any, ids:str, where:str, order:str, df: pd.DataFrame):
     #Query Data
@@ -27,7 +23,7 @@ def SQLSearch(cnxn: any, ids:str, where:str, order:str, df: pd.DataFrame):
         df['CONCAT'] = None
     return df
 
-def SQLEmpty(cnxn: any, URLid: list, where: str):
+def SQLEmpty(cnxn: any, URLid: list, where: str, cMap: pd.DataFrame):
     #Creamos una lista de subconsultas para cada tabla en URLid
     subconsultas = [f"(SELECT TOP 1 1 FROM _Result{tabla} {where}) AS '{tabla}'" for tabla in URLid]
     #Generamos el query con la lista de subconsultas
@@ -47,7 +43,7 @@ def SQLEmpty(cnxn: any, URLid: list, where: str):
     URLid = df.columns.tolist()
     #Imprimimos los calculos que se consultaran
     print("\n" + Fore.GREEN + "Se consultaran los siguientes Calculos: " + Style.RESET_ALL)
-    # for ids in URLid:
-        # print(f"{Fore.BLUE}{re.match(r'^[^ ]*', (cMap.loc[cMap['ResultURLid'] == str(ids), 'Configuration'].values)[0]).group()}{Style.RESET_ALL}")
+    for ids in URLid:
+        print(f"{Fore.BLUE}{re.match(r'^[^ ]*', (cMap.loc[cMap['ResultURLid'] == str(ids), 'Configuration'].values)[0]).group()}{Style.RESET_ALL}")
 
     return URLid

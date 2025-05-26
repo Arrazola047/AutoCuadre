@@ -5,9 +5,7 @@ import json
 import os
 import re
 
-cMap_path = os.path.join(os.path.dirname(__file__), '..', 'utils', 'cMappingTableActive.csv')
 sqlTypeMap = os.path.join(os.path.dirname(__file__), '..', 'utils', 'sqlTypeMap.json')
-cMap = pd.read_csv(os.path.abspath(cMap_path), sep=';', dtype=str)
 
 def getPayload(id: str, where: str, order: str):
     data = {
@@ -17,11 +15,10 @@ def getPayload(id: str, where: str, order: str):
     }
     return data
 
-def getResponse(apiurl: any, header: any, data: any, ids: str):
+def getResponse(apiurl: any, header: any, data: any, ids: str, cMap: pd.DataFrame):
     response = rq.post(apiurl, headers = header, json = data)
     if response.status_code == 200:
-        # print(re.match(r'^[^ ]*', (cMap.loc[cMap['ResultURLid'] == str(ids), 'Configuration'].values)[0]).group() + Fore.GREEN + " - Success! - " + Style.RESET_ALL + " Status Code: " + str(response.status_code))
-        print("ok")
+        print(re.match(r'^[^ ]*', (cMap.loc[cMap['ResultURLid'] == str(ids), 'Configuration'].values)[0]).group() + Fore.GREEN + " - Success! - " + Style.RESET_ALL + " Status Code: " + str(response.status_code))
     elif response.status_code == 401:
         print(re.match(r'^[^ ]*', (cMap.loc[cMap['ResultURLid'] == str(ids), 'Configuration'].values)[0]).group() + Fore.YELLOW + " - Unauthorized - " + Style.RESET_ALL + "Status Code: " + str(response.status_code))
     elif response.status_code == 403:

@@ -12,20 +12,37 @@ import pandas as pd
 
 ##################################### Definicion de Variables #####################################
 
-Modelo = 'VARHNKCat'
+
+
+
 
 ### Carga de Variables de Configuracion ###
 base = os.path.dirname(os.path.abspath(__file__))
 config = configparser.ConfigParser()
 config.read(os.path.join(base, 'config', 'config.ini'))
+ModelList = [m.strip() for m in config['MODELOS']['List'].split(',')]
+
+#Consulta de Modelo 
+print(f"{Fore.BLUE}Que modelo quieres consultar?{Style.RESET_ALL}")
+for i in ModelList:
+    print(i)
+
+while True:
+    Modelo = input(f"{Fore.YELLOW}Ingresa el nombre del modelo:{Style.RESET_ALL} ").strip()
+    if Modelo in ModelList:
+        break
+    else:
+        print(f"{Fore.RED}Modelo no válido. Por favor, ingresa un modelo de la lista.{Style.RESET_ALL}")
+
+#Utilidades de Modelos
 MapArchive = config[Modelo]['MapArchive']
+EnvDir = config[Modelo]['Env_dir']
 
 # Definicion de Rutas
 cMap = pd.read_csv(os.path.join(base, 'utils', MapArchive), sep=';', dtype=str)
-dotenv_path = os.path.join(base, 'EnvHNKCat', '.Env')
+dotenv_path = os.path.join(base, EnvDir, '.Env')
 load_dotenv(dotenv_path)
 output_dir = os.path.join(base, '..', 'Resultados')
-
 
 #Variables de Entorno SQL
 sqlServer = os.environ.get('sqlServer')
@@ -71,7 +88,7 @@ try:
         print(Fore.GREEN + "Conexión SQL Establecida..." + Style.RESET_ALL+ "\n")
 
     #Obtener las tablas con datos
-    URLid = SQLEmpty(cnxn,URLid, where)
+    URLid = SQLEmpty(cnxn,URLid, where, cMap)
     
     print(Fore.GREEN + "\nObteniendo Registros..." + Style.RESET_ALL)
     # Obtenemos los datos de las tablas
@@ -97,7 +114,7 @@ for id in URLid:
     #Generamos el payload para la peticion
     data = getPayload(id, where, order)
     # Peticion al API y Manejo de Respuesta
-    response =  getResponse(apiurl, header, data, id)
+    response =  getResponse(apiurl, header, data, id, cMap)
     
     # Serializacion de la respuesta JSON a DataFrame
     jResponse = pd.json_normalize(response.json())
@@ -154,7 +171,7 @@ LimpiaDirectorio(output_dir)
 #Almacenamos los resultados 
 for id in URLid:
     #Creamos subcarpetas
-    route = CreaSubcarpetas(output_dir, id)
+    route = CreaSubcarpetas(output_dir, id, cMap)
     #Almacenamos los resultados
-    AlmacenaResultados(globals()[id], globals()[id + 'ICM'], route, id, raw)
+    AlmacenaResultados(globals()[id], globals()[id + 'ICM'], route, id, raw, cMap)
 print(Fore.GREEN + "Resultados almacenados en ../Results" + Style.RESET_ALL)
