@@ -12,10 +12,6 @@ import pandas as pd
 
 ##################################### Definicion de Variables #####################################
 
-
-
-
-
 ### Carga de Variables de Configuracion ###
 base = os.path.dirname(os.path.abspath(__file__))
 config = configparser.ConfigParser()
@@ -57,7 +53,7 @@ apiurl = os.environ.get('apiurl')
 
 ## Variables de Configuracion
 raw = config['BOOL'].getboolean('raw')
-lastDate = config['DATE']['ultimaComprobacion']
+lastDate = config[Modelo]['ultimaComprobacion']
 queryYear = config[Modelo]['queryYear']
 periodoType = config[Modelo]['periodoType']
 periodoInicial = config[Modelo]['periodoInicial']
