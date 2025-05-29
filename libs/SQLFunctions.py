@@ -38,7 +38,6 @@ def SQLEmpty(cnxn: any, URLid: list, where: str, cMap: pd.DataFrame):
             print(f"{Fore.RED}{re.match(r'^[^ ]*', (cMap.loc[cMap['ResultURLid'] == str(ids), 'Configuration'].values)[0]).group()}")
         # Eliminamos los registros que no tienen datos
         df = df.dropna(axis=1, how='all')
-    
     # Hacemos una lista con las columnas que tienen datos para posteriormente solo buscar en esas tablas 
     URLid = df.columns.tolist()
     #Imprimimos los calculos que se consultaran

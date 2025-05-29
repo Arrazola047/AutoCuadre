@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from libs.custom import *
 import configparser
 import pandas as pd
+import os
 
 ##################################### Definicion de Variables #####################################
 
@@ -18,25 +19,31 @@ config = configparser.ConfigParser()
 config.read(os.path.join(base, 'config', 'config.ini'))
 ModelList = [m.strip() for m in config['MODELOS']['List'].split(',')]
 
-#Consulta de Modelo 
-print(f"{Fore.BLUE}Que modelo quieres consultar?{Style.RESET_ALL}")
-for i in ModelList:
-    print(i)
+# #Consulta de Modelo 
+# print(f"{Fore.BLUE}Que modelo quieres consultar?{Style.RESET_ALL}")
+# for i in ModelList:
+#     print(i)
 
-while True:
-    Modelo = input(f"{Fore.YELLOW}Ingresa el nombre del modelo:{Style.RESET_ALL} ").strip()
-    if Modelo in ModelList:
-        break
-    else:
-        print(f"{Fore.RED}Modelo no válido. Por favor, ingresa un modelo de la lista.{Style.RESET_ALL}")
+# while True:
+#     Modelo = input(f"{Fore.YELLOW}Ingresa el nombre del modelo:{Style.RESET_ALL} ").strip()
+#     if Modelo in ModelList:
+#         break
+#     else:
+#         print(f"{Fore.RED}Modelo no válido. Por favor, ingresa un modelo de la lista.{Style.RESET_ALL}")
+
+# # Limpiar la terminal antes de continuar
+# os.system('cls' if os.name == 'nt' else 'clear')
+
+Modelo = 'HNKQnc'
 
 #Utilidades de Modelos
 MapArchive = config[Modelo]['MapArchive']
 EnvDir = config[Modelo]['Env_dir']
 
 # Definicion de Rutas
+plurals = os.path.join(base, 'utils', 'plurals.json')
 cMap = pd.read_csv(os.path.join(base, 'utils', MapArchive), sep=';', dtype=str)
-dotenv_path = os.path.join(base, EnvDir, '.Env')
+dotenv_path = os.path.join(base, EnvDir, '.Env') 
 load_dotenv(dotenv_path)
 output_dir = os.path.join(base, '..', 'Resultados')
 
@@ -62,7 +69,7 @@ URLid = cMap['ResultURLid'].tolist()
 qEmpty = []
 
 #Variables de Query
-filtroPeriodo = [f"{queryYear}, {periodoType[:-1 if periodoType.endswith('s') else periodoType]} {str(i).zfill(2)}" for i in range(int(periodoInicial), int(periodoFinal) + 1)]
+filtroPeriodo = [f"{queryYear}, {json.load(open(plurals)).get(periodoType, periodoType)} {str(i).zfill(2)}" for i in range(int(periodoInicial), int(periodoFinal) + 1)]
 where = f'WHERE \"{periodoType}\" IN ({str(filtroPeriodo).strip("[]")})'
 order = 'ORDER BY \"PayeeID_\"'
 
