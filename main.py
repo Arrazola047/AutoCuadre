@@ -23,6 +23,7 @@ Modelo = config['SELECCION']['model']
 
 #Utilidades de Modelos
 MapArchive = config[Modelo]['MapArchive']
+EnvStr = config[Modelo]['EnvStr']
 
 # Definicion de Rutas
 plurals = os.path.join(base, 'utils', 'plurals.json')
@@ -32,20 +33,19 @@ load_dotenv(dotenv_path)
 output_dir = os.path.join(base, '..', 'Resultados')
 
 #Variables de Entorno SQL
-sqlServer = os.environ.get(config[Modelo]['EnvStr'] + 'sqlServer')
-dataBase = os.environ.get(config[Modelo]['EnvStr'] +'dataBase')
-uid = os.environ.get(config[Modelo]['EnvStr'] + 'uid')
-pwd = os.environ.get(config[Modelo]['EnvStr'] + 'pwd')
+sqlServer = os.environ.get(EnvStr + 'sqlServer')
+dataBase = os.environ.get(EnvStr +'dataBase')
+uid = os.environ.get(EnvStr + 'uid')
+pwd = os.environ.get(EnvStr + 'pwd')
 
 #Variables de Entorno ICM
-bearerToken = os.environ.get(config[Modelo]['EnvStr'] + 'bearerToken')
-model = os.environ.get(config[Modelo]['EnvStr'] + 'model')
-apiurl = os.environ.get(config[Modelo]['EnvStr'] + 'apiurl')
+bearerToken = os.environ.get(EnvStr + 'bearerToken')
+model = os.environ.get(EnvStr + 'model')
+apiurl = os.environ.get(EnvStr + 'apiurl')
 
 ## Variables de Configuracion
-tolerancia = config['SELECCION'].getint('tolerancia')
+tolerancia = config['SELECCION'].getint('toleranciaDias')
 raw = config['BOOL'].getboolean('raw')
-lastDate = config[Modelo]['lastCheck']
 queryYear = config[Modelo]['queryYear']
 periodoType = config[Modelo]['periodoType']
 periodoInicial = config[Modelo]['periodoInicial']
@@ -70,7 +70,7 @@ header = {
 }
 
 #Verificamos que las tablas activas e inactivas estan actualizadas
-validaActiveCheck(lastDate, Modelo, tolerancia)
+validaActiveCheck(tolerancia, EnvStr)
 
 ######################### Conexion a SQL #########################
 try: 
@@ -140,17 +140,6 @@ for id in URLid:
     # Ejecucion de redondeo estricto
     globals()[id] = HardRound(globals()[id])
 print(Fore.GREEN + "DataFrames procesados" + Style.RESET_ALL)
-# ########################## Impresión de Resultados #########################
-# # id = URLid[0]
-# campoPeriodo = ObtenerPeriodoREGEX(globals()[URLid[0]]) 
-
-# #Impresion de Faltantes
-# # for id in URLid:
-# #     icm = id + 'ICM'
-# #     ImprimeFaltantes(filtroPeriodo, campoPeriodo, globals()[id], globals()[icm], id)
-# #     ImprimeCoincidencias(filtroPeriodo, campoPeriodo, globals()[id], id)
-# #     ImprimeExcedentes(filtroPeriodo, campoPeriodo, globals()[icm], id)
-# #     ImprimeGeneral(globals()[id], id)
 
 ########################## Almacenado de Resultados #########################
 # NOTA IMPORTANTE!!!! 
@@ -165,4 +154,7 @@ for id in URLid:
     route = CreaSubcarpetas(output_dir, id, cMap)
     #Almacenamos los resultados
     AlmacenaResultados(globals()[id], globals()[id + 'ICM'], route, id, raw, cMap)
+    #Impresion de Resultados
+    ImprimeResumen(filtroPeriodo, globals()[id], globals()[id + 'ICM'], id, route, cMap, periodoType, periodoInicial, periodoFinal)
+
 print(Fore.GREEN + "Resultados almacenados en ../Results" + Style.RESET_ALL)

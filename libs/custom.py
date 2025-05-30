@@ -3,12 +3,13 @@ from colorama import Fore, Style
 import configparser
 import pandas as pd
 import subprocess
-import re 
+import json
 import os
 
 base = os.path.dirname(os.path.abspath(__file__))
 config = configparser.ConfigParser()
 config.read(os.path.join(base, '..', 'config', 'config.ini'))
+lastDateJson = os.path.join(base, '..', 'utils', 'checkDate.json')
 
 def identificar_multipo(row): 
     try: 
@@ -55,18 +56,20 @@ def colorPCTG(x):
         color = Fore.GREEN + Style.BRIGHT
     return color
 
-def validaActiveCheck(lastDate: str, Modelo: str, tolerancia: int):
+def validaActiveCheck(tolerancia: int, EnvStr: str):
+    with open(lastDateJson, 'r') as f:
+        data = json.load(f)
+        lastDate = data.get(EnvStr + 'lastCheck', None)
+    route = os.path.join(base, '..', 'Scripts', 'MapActiveCheck.py')
     if datetime.now() - datetime.strptime(lastDate, "%d/%m/%Y") > timedelta(days=tolerancia):
         print(Fore.RED + "ALERTA!!! - La ultima Verificacion de Tablas activas fue hace mas de 15 dias" + Style.RESET_ALL)
         print(Fore.YELLOW + "Ejecutando Verificacion de Tablas..." + Style.RESET_ALL + "\n")
-        subprocess.run(['python', 'Scripts/MapActiveCheck.py'], check=True)
+        subprocess.run(['python', route], check=True)
         print(Fore.GREEN + "Verificación ejecutada correctamente" + Style.RESET_ALL)
-        config[Modelo]['lastCheck'] = datetime.now().strftime("%d/%m/%Y")
-
-##NO USADO
-def ObtenerPeriodoREGEX(id: pd.DataFrame): 
-    campoPeriodo = next(
-        (col for col in id.columns if re.match(r'^\d{4},.+?\d{2}$', str(id.iloc[0][col]))),
-        None
-    )    
-    return campoPeriodo
+        with open(lastDateJson, 'r+') as f:
+            data = json.load(f)
+            data[EnvStr + 'lastCheck'] = datetime.now().strftime("%d/%m/%Y")
+            f.seek(0)
+            json.dump(data, f, indent=4)
+            f.truncate()
+        os.system('cls' if os.name == 'nt' else 'clear')

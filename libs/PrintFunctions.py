@@ -1,48 +1,55 @@
 from colorama import Fore, Style
 from libs.custom import *
 import pandas as pd 
+import re
 import os
 
+def ImprimeResumen(filtroPeriodo: list, df: pd.DataFrame, icm: pd.DataFrame, ids: str, route: str, cMap: pd.DataFrame, campoPeriodo: str, periodoInicial: int, periodoFinal: int):
+    #Encontramos el nombre del incentivo
+    calc = re.match(r'^[^ ]*', (cMap.loc[cMap['ResultURLid'] == str(ids), 'Configuration'].values)[0]).group()
 
+    # Crear un archivo markdown y escribir información relevante
+    md_filename = os.path.join(route, f"Resumen - {calc}.md")
+    with open(md_filename, "w", encoding="utf-8") as md_file:
+        #Escribimos los Faltantes
+          #Encabezado
+        md_file.write(f"# Faltantes para el Incentivo {calc}\n")
+          #Body
+        for i in filtroPeriodo:
+            total = len(df[df[campoPeriodo] == i])
+            existentes = df[df[campoPeriodo] == i]['CONCAT'].isin(icm['CONCAT']).sum()
+            faltan = abs(existentes - total)
+            md_file.write(f"- Periodo {i}: {existentes} de {total} registros, faltan {faltan} registros\n")
+        total_existentes = len(df[df['ExisteGRAL'] == True])
+        porcentaje = (total_existentes / len(df) * 100) if len(df) > 0 else 0
+        md_file.write(f"**Existencia en ICM:** {total_existentes} / {len(df)} registros\n")
+        md_file.write(f"**Porcentaje total de existencias:** {porcentaje:.2f}%\n")
+        md_file.write(f"{'-'*50}\n")
 
-def ImprimeCoincidencias(filtroPeriodo: list, campoPeriodo: str, df: pd.DataFrame, ids: str, cMap: pd.DataFrame):
-    print(Fore.GREEN + "Coincidencias " + Style.RESET_ALL + "VALUE en Registros Existentes Para el Incentivo " + re.match(r'^[^ ]*', (cMap.loc[cMap['ResultURLid'] == str(ids), 'Configuration'].values)[0]).group() + "\n")
+        #Escribimos las Coincidencias
+            #Encabezado
+        md_file.write(f"\n# Coincidencias en Value para el Incentivo {calc}\n")
+            #Body
+        for i in filtroPeriodo:
+            total = len(df[(df[campoPeriodo] == i) & (df['ExisteGRAL'] == True)])
+            coincidencias = len(df[(df[campoPeriodo] == i) & (df['CoincideSOFT'] == True) & (df['ExisteGRAL'] == True)])
+            faltan = abs(coincidencias - total)
+            md_file.write(f"- Periodo {i}: {coincidencias} de {total} registros, faltan {faltan} registros\n")
+        total_coincidencias = len(df[df['CoincideSOFT'] == True])
+        porcentaje_coincidencias = (total_coincidencias / len(df) * 100) if len(df) > 0 else 0
+        md_file.write(f"**Coincidencias en Value:** {total_coincidencias} / {len(df)} registros\n")
+        md_file.write(f"**Porcentaje de coincidencias en Value:** {porcentaje_coincidencias:.2f}%\n")
+        md_file.write(f"{'-'*50}\n")
 
-    for i in filtroPeriodo:
-        print(f"Del periodo {i} tenemos {len(df[(df[campoPeriodo] == i) & (df['CoincideSOFT'] == True) & (df['ExisteGRAL'] == True)])} registros de {len(df[(df[campoPeriodo] == i) & (df['ExisteGRAL'] == True)])}, faltan {abs(len(df[(df[campoPeriodo] == i) & (df['CoincideSOFT'] == True) & (df['ExisteGRAL'] == True)]) - len(df[(df[campoPeriodo] == i) & (df['ExisteGRAL'] == True)]))} registros")
-    print(f"{"-"*50}\n")
-    
-    if len(df[df['CoincideSOFT'] == False]) > 0:
-        print(f"Del total de registros que existen tanto en PRD como en ICM tenemos una coincidencia de {len(df[(df['CoincideSOFT'] == True) & (df['ExisteGRAL'] == True)])} / {len(df[df['ExisteGRAL'] == True])} registros, faltan {len(df[(df['CoincideSOFT'] == False) & (df['ExisteGRAL'] == True)])} Registros por revisar")
-    else:
-        print(f"Del total de registros que existen tanto en PRD como en ICM, tenemos una coincidencia de {len(df[df['CoincideSOFT'] == True])} registros")
-    print(f"Porcentaje de Coincidencias en Value del incentivo " + re.match(r'^[^ ]*', (cMap.loc[cMap['ResultURLid'] == str(ids), 'Configuration'].values)[0]).group() + " con respecto a los registros existentes: " + Fore.BLUE + f"{len(df[df['CoincideSOFT'] == True]) / len(df) * 100:.2f}%" + Style.RESET_ALL)
-    print(f"\n{"#"*50}\n")
-
-def ImprimeFaltantes(filtroPeriodo: list, campoPeriodo: str, df: pd.DataFrame, icm: pd.DataFrame, ids: str, cMap: pd.DataFrame):
-    print(Fore.RED + "FALTANTES " + Style.RESET_ALL + "Para el Incentivo " + re.match(r'^[^ ]*', (cMap.loc[cMap['ResultURLid'] == str(ids), 'Configuration'].values)[0]).group() + "\n")
-
-    for i in filtroPeriodo:
-        print(f"Del periodo {i} tenemos {df[df[campoPeriodo] == i]['CONCAT'].isin(icm['CONCAT']).sum()} registros de {len(df[df[campoPeriodo] == i])}, faltan {abs(df[df[campoPeriodo] == i]['CONCAT'].isin(icm['CONCAT']).sum() - len(df[df[campoPeriodo] == i]))} registros")
-    print(f"{"-"*50}\n")
-
-    print(f"En el modelo de ICM, tenemos una Existencia de {len(df[df['ExisteGRAL'] == True])} / {len(df)} registros con respecto a PRD")
-    print(f"Porcentaje total de Existencias del incentivo " + re.match(r'^[^ ]*', (cMap.loc[cMap['ResultURLid'] == str(ids), 'Configuration'].values)[0]).group() + "en los periodos a trabajar: " + Fore.BLUE + f"{len(df[df['ExisteGRAL'] == True]) / len(df) * 100:.2f}%" +  Style.RESET_ALL)
-    print(f"\n{"#"*50}\n")
-
-def ImprimeExcedentes(filtroPeriodo: list, campoPeriodo: str, icm: pd.DataFrame, ids: str, cMap: pd.DataFrame):
-    print(Fore.YELLOW + "Excedentes " + Style.RESET_ALL + "de ICM Para el Incentivo " + re.match(r'^[^ ]*', (cMap.loc[cMap['ResultURLid'] == str(ids), 'Configuration'].values)[0]).group() +  "\n")
-
-    for i in filtroPeriodo:
-        print(f"Del periodo {i} tenemos {len(icm[(icm['ExistePRD'] == False) & (icm[campoPeriodo] == i)])} registros excedentes")
-    print(f"\n{"#"*50}\n")
-
-def ImprimeGeneral(df: pd.DataFrame, ids: str, cMap: pd.DataFrame):
-    color = Fore.WHITE + Style.BRIGHT
-    reset = Style.RESET_ALL
-    
-    operacionA = (len(df[(df['CoincideSOFT'] == True) & (df['ExisteGRAL'] == True)]) / len(df) * 100)
-    print(Fore.LIGHTMAGENTA_EX + "Estatus general del Incentivo " + reset + re.match(r'^[^ ]*', (cMap.loc[cMap['ResultURLid'] == str(ids), 'Configuration'].values)[0]).group() +  "\n")
-    color = colorPCTG(operacionA)
-    print("Porcentaje del calculo correspondiente con los periodos a trabajar: " + color + f"{operacionA:.2f}%" + reset)
-    print(f"\n{"#"*50}\n")
+        #Escribimos los Excedentes
+            #Encabezado
+        md_file.write(f"\n# Excedentes en ICM para el Incentivo {calc}\n")
+            #Body
+        for i in filtroPeriodo:
+            total = len(icm[(icm['ExistePRD'] == False) & (icm[campoPeriodo] == i)])
+            md_file.write(f"- Periodo {i}: {total} registros excedentes\n")
+        total_excedentes = len(icm[icm['ExistePRD'] == False])
+        md_file.write(f"**Total de Excedentes en ICM:** {total_excedentes} registros\n")
+        md_file.write(f"{'-' * 50}\n")
+        
+        md_file.write(f"\n# Porcentaje general del cuadre en los periodos {periodoInicial} a {periodoFinal}: {len(df[(df['CoincideSOFT'] == True) & (df['ExisteGRAL'] == True)]) / len(df) * 100:.2f}%\n")  
