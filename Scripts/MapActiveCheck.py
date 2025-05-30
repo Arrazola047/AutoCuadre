@@ -42,21 +42,22 @@ try:
                     WHERE OBJECT_NAME(p.object_id) IN ({tables})
                     GROUP BY OBJECT_NAME(p.object_id)""")
     df = pd.read_sql(query, cnxn)
-
-    # Filtramos las tablas que tienen 0 filas
-    empty_tables = df[df['TotalRows'] == 0]['TableName'].tolist()
-    # Filtramos las tablas que tienen filas
-    active_tables = df[df['TotalRows'] > 0]['TableName'].tolist()
-
-    # Actualizamos el status de activo en el archivo de mapeo de calculos finales
-    for table in active_tables:
-        cMap.loc[cMap['ResultURLid'] == int(table.replace('_Result', '')), 'Active'] = 1
-    for table in empty_tables:
-        cMap.loc[cMap['ResultURLid'] == int(table.replace('_Result', '')), 'Active'] = 0
+    print(Fore.GREEN + "Consulta de Metadatos Realizada" + Style.RESET_ALL)
 finally:
     if cnxn:
         cnxn.dispose()
         print(Fore.YELLOW + "Conexión SQL Cerrada" + Style.RESET_ALL + "\n")
 
+# Actualizamos el campo Active para indicar que tablas tienen datos y cuales no v
+for table in df['TableName'].tolist():
+    idRow = int(table.replace('_Result', ''))
+    if df.loc[df['TableName'] == table, 'TotalRows'].values[0] > 0:
+        cMap.loc[cMap['ResultURLid'] == str(idRow), 'Active'] = 1
+        print(cMap.loc[cMap['ResultURLid'] == str(idRow)])
+    else: 
+        cMap.loc[cMap['ResultURLid'] == str(idRow), 'Active'] = 0
+        print(cMap.loc[cMap['ResultURLid'] == str(idRow)])
+
 # Guardamos los resultados en los CSV correspondientes
 cMap.to_csv(os.path.join(base, '..', 'utils', MapArchive) + '.csv', sep=';', index=False)
+print(Fore.GREEN + "CSV de Map Active Actualizado" + Style.RESET_ALL)
