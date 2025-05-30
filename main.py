@@ -9,46 +9,67 @@ from dotenv import load_dotenv
 from libs.custom import *
 import configparser
 import pandas as pd
+import os
 
 ##################################### Definicion de Variables #####################################
-# Definicion de Rutas
-base = os.path.dirname(os.path.abspath(__file__))
-map = pd.read_csv(os.path.join(base, 'utils', 'cMappingTableActive.csv'), sep=';', dtype=str)
-dotenv_path = os.path.join(base, 'Env', '.Env')
-# output_dir = r'..\Resultados'
-output_dir = os.path.join(base, '..', 'Resultados')
-
-### Carga de Varialbes de Entorno ###
-dotenv_path = os.path.join(base, 'Env', '.Env')
-load_dotenv(dotenv_path)
 
 ### Carga de Variables de Configuracion ###
+base = os.path.dirname(os.path.abspath(__file__))
 config = configparser.ConfigParser()
 config.read(os.path.join(base, 'config', 'config.ini'))
+ModelList = [m.strip() for m in config['MODELOS']['List'].split(',')]
+
+# #Consulta de Modelo 
+# print(f"{Fore.BLUE}Que modelo quieres consultar?{Style.RESET_ALL}")
+# for i in ModelList:
+#     print(i)
+
+# while True:
+#     Modelo = input(f"{Fore.YELLOW}Ingresa el nombre del modelo:{Style.RESET_ALL} ").strip()
+#     if Modelo in ModelList:
+#         break
+#     else:
+#         print(f"{Fore.RED}Modelo no válido. Por favor, ingresa un modelo de la lista.{Style.RESET_ALL}")
+
+# # Limpiar la terminal antes de continuar
+# os.system('cls' if os.name == 'nt' else 'clear')
+
+Modelo = config['SELECCION']['model']
+
+#Utilidades de Modelos
+MapArchive = config[Modelo]['MapArchive']
+
+# Definicion de Rutas
+plurals = os.path.join(base, 'utils', 'plurals.json')
+cMap = pd.read_csv(os.path.join(base, 'utils', MapArchive) + '.csv', sep=';', dtype=str)
+dotenv_path = os.path.join(base, 'Env', '.Env') 
+load_dotenv(dotenv_path)
+output_dir = os.path.join(base, '..', 'Resultados')
 
 #Variables de Entorno SQL
-sqlServer = os.environ.get('sqlServer')
-dataBase = os.environ.get('dataBase')
-uid = os.environ.get('uid')
-pwd = os.environ.get('pwd')
+sqlServer = os.environ.get(config[Modelo]['EnvStr'] + 'sqlServer')
+dataBase = os.environ.get(config[Modelo]['EnvStr'] +'dataBase')
+uid = os.environ.get(config[Modelo]['EnvStr'] + 'uid')
+pwd = os.environ.get(config[Modelo]['EnvStr'] + 'pwd')
 
 #Variables de Entorno ICM
-bearerToken = os.environ.get('bearerToken')
-model = os.environ.get('model')
-apiurl = os.environ.get('apiurl')
+bearerToken = os.environ.get(config[Modelo]['EnvStr'] + 'bearerToken')
+model = os.environ.get(config[Modelo]['EnvStr'] + 'model')
+apiurl = os.environ.get(config[Modelo]['EnvStr'] + 'apiurl')
 
 ## Variables de Configuracion
+tolerancia = config['SELECCION'].getint('tolerancia')
 raw = config['BOOL'].getboolean('raw')
-lastDate = config['DATE']['ultimaComprobacion']
-queryYear = '2024'
-periodoType = 'Weeks'
-periodoInicial = '10'
-periodoFinal = '30'
-URLid = map['ResultURLid'].tolist()
+lastDate = config[Modelo]['lastCheck']
+queryYear = config[Modelo]['queryYear']
+periodoType = config[Modelo]['periodoType']
+periodoInicial = config[Modelo]['periodoInicial']
+periodoFinal = config[Modelo]['periodoFinal']
+URLid = cMap['ResultURLid'].tolist()
 qEmpty = []
 
 #Variables de Query
-filtroPeriodo = [f"{queryYear}, {periodoType[:-1 if periodoType.endswith('s') else periodoType]} {str(i).zfill(2)}" for i in range(int(periodoInicial), int(periodoFinal) + 1)]
+filtroPeriodo = [f"{queryYear}, {json.load(open(plurals)).get(periodoType, periodoType)} {str(i).zfill(2)}" for i in range(int(periodoInicial), int(periodoFinal) + 1)]
 where = f'WHERE \"{periodoType}\" IN ({str(filtroPeriodo).strip("[]")})'
 order = 'ORDER BY \"PayeeID_\"'
 
@@ -63,6 +84,9 @@ header = {
     "Model": model
 }
 
+#Verificamos que las tablas activas e inactivas estan actualizadas
+validaActiveCheck(lastDate, Modelo, tolerancia)
+
 ######################### Conexion a SQL #########################
 try: 
     cnxn = create_engine(conn_str)
@@ -70,7 +94,7 @@ try:
         print(Fore.GREEN + "Conexión SQL Establecida..." + Style.RESET_ALL+ "\n")
 
     #Obtener las tablas con datos
-    URLid = SQLEmpty(cnxn,URLid, where)
+    URLid = SQLEmpty(cnxn,URLid, where, cMap)
     
     print(Fore.GREEN + "\nObteniendo Registros..." + Style.RESET_ALL)
     # Obtenemos los datos de las tablas
@@ -96,7 +120,7 @@ for id in URLid:
     #Generamos el payload para la peticion
     data = getPayload(id, where, order)
     # Peticion al API y Manejo de Respuesta
-    response =  getResponse(apiurl, header, data, id)
+    response =  getResponse(apiurl, header, data, id, cMap)
     
     # Serializacion de la respuesta JSON a DataFrame
     jResponse = pd.json_normalize(response.json())
@@ -142,7 +166,6 @@ print(Fore.GREEN + "DataFrames procesados" + Style.RESET_ALL)
 # #     ImprimeCoincidencias(filtroPeriodo, campoPeriodo, globals()[id], id)
 # #     ImprimeExcedentes(filtroPeriodo, campoPeriodo, globals()[icm], id)
 # #     ImprimeGeneral(globals()[id], id)
-    
 
 ########################## Almacenado de Resultados #########################
 # NOTA IMPORTANTE!!!! 
@@ -154,7 +177,7 @@ LimpiaDirectorio(output_dir)
 #Almacenamos los resultados 
 for id in URLid:
     #Creamos subcarpetas
-    route = CreaSubcarpetas(output_dir, id)
+    route = CreaSubcarpetas(output_dir, id, cMap)
     #Almacenamos los resultados
-    AlmacenaResultados(globals()[id], globals()[id + 'ICM'], route, id, raw)
+    AlmacenaResultados(globals()[id], globals()[id + 'ICM'], route, id, raw, cMap)
 print(Fore.GREEN + "Resultados almacenados en ../Results" + Style.RESET_ALL)

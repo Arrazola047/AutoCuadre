@@ -1,6 +1,14 @@
+from datetime import datetime, timedelta
 from colorama import Fore, Style
+import configparser
 import pandas as pd
+import subprocess
 import re 
+import os
+
+base = os.path.dirname(os.path.abspath(__file__))
+config = configparser.ConfigParser()
+config.read(os.path.join(base, '..', 'config', 'config.ini'))
 
 def identificar_multipo(row): 
     try: 
@@ -46,6 +54,14 @@ def colorPCTG(x):
     else:
         color = Fore.GREEN + Style.BRIGHT
     return color
+
+def validaActiveCheck(lastDate: str, Modelo: str, tolerancia: int):
+    if datetime.now() - datetime.strptime(lastDate, "%d/%m/%Y") > timedelta(days=tolerancia):
+        print(Fore.RED + "ALERTA!!! - La ultima Verificacion de Tablas activas fue hace mas de 15 dias" + Style.RESET_ALL)
+        print(Fore.YELLOW + "Ejecutando Verificacion de Tablas..." + Style.RESET_ALL + "\n")
+        subprocess.run(['python', 'Scripts/MapActiveCheck.py'], check=True)
+        print(Fore.GREEN + "Verificación ejecutada correctamente" + Style.RESET_ALL)
+        config[Modelo]['lastCheck'] = datetime.now().strftime("%d/%m/%Y")
 
 ##NO USADO
 def ObtenerPeriodoREGEX(id: pd.DataFrame): 

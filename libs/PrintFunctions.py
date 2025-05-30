@@ -3,11 +3,9 @@ from libs.custom import *
 import pandas as pd 
 import os
 
-cMap_path = os.path.join(os.path.dirname(__file__), '..', 'utils', 'cMappingTableActive.csv')
-cMap = pd.read_csv(os.path.abspath(cMap_path), sep=';', dtype=str)
 
 
-def ImprimeCoincidencias(filtroPeriodo: list, campoPeriodo: str, df: pd.DataFrame, ids: str):
+def ImprimeCoincidencias(filtroPeriodo: list, campoPeriodo: str, df: pd.DataFrame, ids: str, cMap: pd.DataFrame):
     print(Fore.GREEN + "Coincidencias " + Style.RESET_ALL + "VALUE en Registros Existentes Para el Incentivo " + re.match(r'^[^ ]*', (cMap.loc[cMap['ResultURLid'] == str(ids), 'Configuration'].values)[0]).group() + "\n")
 
     for i in filtroPeriodo:
@@ -21,7 +19,7 @@ def ImprimeCoincidencias(filtroPeriodo: list, campoPeriodo: str, df: pd.DataFram
     print(f"Porcentaje de Coincidencias en Value del incentivo " + re.match(r'^[^ ]*', (cMap.loc[cMap['ResultURLid'] == str(ids), 'Configuration'].values)[0]).group() + " con respecto a los registros existentes: " + Fore.BLUE + f"{len(df[df['CoincideSOFT'] == True]) / len(df) * 100:.2f}%" + Style.RESET_ALL)
     print(f"\n{"#"*50}\n")
 
-def ImprimeFaltantes(filtroPeriodo: list, campoPeriodo: str, df: pd.DataFrame, icm: pd.DataFrame, ids: str):
+def ImprimeFaltantes(filtroPeriodo: list, campoPeriodo: str, df: pd.DataFrame, icm: pd.DataFrame, ids: str, cMap: pd.DataFrame):
     print(Fore.RED + "FALTANTES " + Style.RESET_ALL + "Para el Incentivo " + re.match(r'^[^ ]*', (cMap.loc[cMap['ResultURLid'] == str(ids), 'Configuration'].values)[0]).group() + "\n")
 
     for i in filtroPeriodo:
@@ -32,14 +30,14 @@ def ImprimeFaltantes(filtroPeriodo: list, campoPeriodo: str, df: pd.DataFrame, i
     print(f"Porcentaje total de Existencias del incentivo " + re.match(r'^[^ ]*', (cMap.loc[cMap['ResultURLid'] == str(ids), 'Configuration'].values)[0]).group() + "en los periodos a trabajar: " + Fore.BLUE + f"{len(df[df['ExisteGRAL'] == True]) / len(df) * 100:.2f}%" +  Style.RESET_ALL)
     print(f"\n{"#"*50}\n")
 
-def ImprimeExcedentes(filtroPeriodo: list, campoPeriodo: str, icm: pd.DataFrame, ids: str):
+def ImprimeExcedentes(filtroPeriodo: list, campoPeriodo: str, icm: pd.DataFrame, ids: str, cMap: pd.DataFrame):
     print(Fore.YELLOW + "Excedentes " + Style.RESET_ALL + "de ICM Para el Incentivo " + re.match(r'^[^ ]*', (cMap.loc[cMap['ResultURLid'] == str(ids), 'Configuration'].values)[0]).group() +  "\n")
 
     for i in filtroPeriodo:
         print(f"Del periodo {i} tenemos {len(icm[(icm['ExistePRD'] == False) & (icm[campoPeriodo] == i)])} registros excedentes")
     print(f"\n{"#"*50}\n")
 
-def ImprimeGeneral(df: pd.DataFrame, ids: str):
+def ImprimeGeneral(df: pd.DataFrame, ids: str, cMap: pd.DataFrame):
     color = Fore.WHITE + Style.BRIGHT
     reset = Style.RESET_ALL
     
