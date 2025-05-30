@@ -2,27 +2,31 @@
 from colorama import Fore, Style
 from sqlalchemy import create_engine, text
 from dotenv import load_dotenv
+import configparser
 import pandas as pd 
 import os
 
 #Definicion de Ruta de Variable de Entorno
 base = os.path.dirname(os.path.abspath(__file__))
-dotenv_path = os.path.join(os.path.dirname(__file__), 'Env', '.Env')
+config = configparser.ConfigParser()
+config.read(os.path.join(base, '..', 'config', 'config.ini'))
+dotenv_path = os.path.join(base, '..', 'Env', '.Env')
+Modelo = config['SELECCION']['model']
+MapArchive = config[Modelo]['MapArchive']
 
 #Variables de Entorno 
 load_dotenv(dotenv_path)
-sqlServer = os.environ.get('sqlServer')
-dataBase = os.environ.get('dataBase')
-uid = os.environ.get('uid')
-pwd = os.environ.get('pwd')
+sqlServer = os.environ.get(config[Modelo]['EnvStr'] + 'sqlServer')
+dataBase = os.environ.get(config[Modelo]['EnvStr'] +'dataBase')
+uid = os.environ.get(config[Modelo]['EnvStr'] + 'uid')
+pwd = os.environ.get(config[Modelo]['EnvStr'] + 'pwd')
 
 ## Definicion de los CSV Map Active y OFF 
-map = pd.read_csv(r'utils/cMappingTableActive.csv', sep=';', dtype=str)
-off = pd.read_csv(r'utils/cMappingTableOFF.csv', sep=';', dtype=str)
+cMap = pd.read_csv(os.path.join(base, '..', 'utils', MapArchive) + '.csv', sep=';', dtype=str)
 
 ## Definicion de Variables para la creacion de Query's
     ##Definicion de id's de las tablas en ICM (Tanto activas como Inactivas)
-URLid = map['ResultURLid'].tolist() + off['ResultURLid'].tolist()
+URLid = cMap['ResultURLid'].tolist()
 tables = ','.join([f"'_Result{i}'" for i in URLid])
 conn_str = (f"mssql+pyodbc://{uid}:{pwd}@{sqlServer}/{dataBase}?driver=ODBC+Driver+17+for+SQL+Server")
 cnxn = None
@@ -44,19 +48,15 @@ try:
     # Filtramos las tablas que tienen filas
     active_tables = df[df['TotalRows'] > 0]['TableName'].tolist()
 
-    # Guardamos las tablas activas en el CSV de MappingTableActive
+    # Actualizamos el status de activo en el archivo de mapeo de calculos finales
     for table in active_tables:
-        if table not in map['ResultURLid'].tolist():
-            map = pd.concat([map, pd.DataFrame({'ResultURLid': [table]})], ignore_index=True)
-    # Guardamos las tablas inactivas en el CSV de MappingTableOFF
+        cMap.loc[cMap['ResultURLid'] == int(table.replace('_Result', '')), 'Active'] = 1
     for table in empty_tables:
-        if table not in off['ResultURLid'].tolist():
-            off = pd.concat([off, pd.DataFrame({'ResultURLid': [table]})], ignore_index=True)
+        cMap.loc[cMap['ResultURLid'] == int(table.replace('_Result', '')), 'Active'] = 0
 finally:
     if cnxn:
         cnxn.dispose()
         print(Fore.YELLOW + "Conexión SQL Cerrada" + Style.RESET_ALL + "\n")
 
 # Guardamos los resultados en los CSV correspondientes
-map.to_csv('cMappingTableActive.csv', sep=';', index=False)
-off.to_csv('cMappingTableOFF.csv', sep=';', index=False)
+cMap.to_csv(os.path.join(base, '..', 'utils', MapArchive) + '.csv', sep=';', index=False)

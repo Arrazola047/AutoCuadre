@@ -34,15 +34,14 @@ ModelList = [m.strip() for m in config['MODELOS']['List'].split(',')]
 # # Limpiar la terminal antes de continuar
 # os.system('cls' if os.name == 'nt' else 'clear')
 
-Modelo = 'HNKQnc'
+Modelo = config['SELECCION']['model']
 
 #Utilidades de Modelos
 MapArchive = config[Modelo]['MapArchive']
-# EnvDir = config[Modelo]['Env_dir']
 
 # Definicion de Rutas
 plurals = os.path.join(base, 'utils', 'plurals.json')
-cMap = pd.read_csv(os.path.join(base, 'utils', MapArchive), sep=';', dtype=str)
+cMap = pd.read_csv(os.path.join(base, 'utils', MapArchive) + '.csv', sep=';', dtype=str)
 dotenv_path = os.path.join(base, 'Env', '.Env') 
 load_dotenv(dotenv_path)
 output_dir = os.path.join(base, '..', 'Resultados')
@@ -59,8 +58,9 @@ model = os.environ.get(config[Modelo]['EnvStr'] + 'model')
 apiurl = os.environ.get(config[Modelo]['EnvStr'] + 'apiurl')
 
 ## Variables de Configuracion
+tolerancia = config['SELECCION'].getint('tolerancia')
 raw = config['BOOL'].getboolean('raw')
-lastDate = config[Modelo]['ultimaComprobacion']
+lastDate = config[Modelo]['lastCheck']
 queryYear = config[Modelo]['queryYear']
 periodoType = config[Modelo]['periodoType']
 periodoInicial = config[Modelo]['periodoInicial']
@@ -83,6 +83,9 @@ header = {
     "Content-Type": "application/json",
     "Model": model
 }
+
+#Verificamos que las tablas activas e inactivas estan actualizadas
+validaActiveCheck(lastDate, Modelo, tolerancia)
 
 ######################### Conexion a SQL #########################
 try: 
