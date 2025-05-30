@@ -4,7 +4,7 @@ poseer las ligas de acceso en el archivo .Env y poseer el archivo 'cMappingTable
 
 # MapActiveCheck 
 Este proyecto ejecuta de manera periodica (Cada 15 dias) un subproceso llamado MapActiveCheck
-El script `MapActiveCheck.py` se encarga de verificar la existencia de Datos en la Base de Datos SQL de las tablas definidas en 'cMappingTableActive.csv' y 'cMappingTableOFF.csv'. 
+El script `MapActiveCheck.py` se encarga de verificar la existencia de Datos en la Base de Datos SQL de las tablas definidas en `cMappingTable.csv`. 
 Todas aquellas tablas existentes en 'cMappingTableActive.csv' que no tengan datos en SQL se les asignara un valor en el campo Active 0 y seran descartadas para la comparativa (cuadre) de tablas.
 Esto con el fin de evitar el uso de recursos innecesarios en tablas Vacias.
 
