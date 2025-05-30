@@ -38,25 +38,25 @@ Modelo = 'HNKQnc'
 
 #Utilidades de Modelos
 MapArchive = config[Modelo]['MapArchive']
-EnvDir = config[Modelo]['Env_dir']
+# EnvDir = config[Modelo]['Env_dir']
 
 # Definicion de Rutas
 plurals = os.path.join(base, 'utils', 'plurals.json')
 cMap = pd.read_csv(os.path.join(base, 'utils', MapArchive), sep=';', dtype=str)
-dotenv_path = os.path.join(base, EnvDir, '.Env') 
+dotenv_path = os.path.join(base, 'Env', '.Env') 
 load_dotenv(dotenv_path)
 output_dir = os.path.join(base, '..', 'Resultados')
 
 #Variables de Entorno SQL
-sqlServer = os.environ.get('sqlServer')
-dataBase = os.environ.get('dataBase')
-uid = os.environ.get('uid')
-pwd = os.environ.get('pwd')
+sqlServer = os.environ.get(config[Modelo]['EnvStr'] + 'sqlServer')
+dataBase = os.environ.get(config[Modelo]['EnvStr'] +'dataBase')
+uid = os.environ.get(config[Modelo]['EnvStr'] + 'uid')
+pwd = os.environ.get(config[Modelo]['EnvStr'] + 'pwd')
 
 #Variables de Entorno ICM
-bearerToken = os.environ.get('bearerToken')
-model = os.environ.get('model')
-apiurl = os.environ.get('apiurl')
+bearerToken = os.environ.get(config[Modelo]['EnvStr'] + 'bearerToken')
+model = os.environ.get(config[Modelo]['EnvStr'] + 'model')
+apiurl = os.environ.get(config[Modelo]['EnvStr'] + 'apiurl')
 
 ## Variables de Configuracion
 raw = config['BOOL'].getboolean('raw')
