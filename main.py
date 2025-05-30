@@ -19,21 +19,6 @@ config = configparser.ConfigParser()
 config.read(os.path.join(base, 'config', 'config.ini'))
 ModelList = [m.strip() for m in config['MODELOS']['List'].split(',')]
 
-# #Consulta de Modelo 
-# print(f"{Fore.BLUE}Que modelo quieres consultar?{Style.RESET_ALL}")
-# for i in ModelList:
-#     print(i)
-
-# while True:
-#     Modelo = input(f"{Fore.YELLOW}Ingresa el nombre del modelo:{Style.RESET_ALL} ").strip()
-#     if Modelo in ModelList:
-#         break
-#     else:
-#         print(f"{Fore.RED}Modelo no válido. Por favor, ingresa un modelo de la lista.{Style.RESET_ALL}")
-
-# # Limpiar la terminal antes de continuar
-# os.system('cls' if os.name == 'nt' else 'clear')
-
 Modelo = config['SELECCION']['model']
 
 #Utilidades de Modelos
