@@ -1,13 +1,12 @@
-# IMPORTANTE! 
+# IMPORTANTE!
 Antes de ejecutar cualquiera de los dos scripts, asegurate de estar conectado a la VPN correspondiente, 
-poseer las ligas de acceso en el archivo .Env y poseer el archivo 'cMappingTableActive.csv' en la carpeta utils
+poseer las ligas de acceso en el archivo .Env y poseer el archivo 'cMappingTableActive.csv' en la carpeta utils.
 
-# MapActiveCheck 
+# MapActiveCheck
 Este proyecto ejecuta de manera periodica (Cada 15 dias) un subproceso llamado MapActiveCheck
 El script `MapActiveCheck.py` se encarga de verificar la existencia de Datos en la Base de Datos SQL de las tablas definidas en `cMappingTable.csv`. 
-Todas aquellas tablas existentes en 'cMappingTableActive.csv' que no tengan datos en SQL se les asignara un valor en el campo Active 0 y seran descartadas para la comparativa (cuadre) de tablas.
+Todas aquellas tablas existentes en `cMappingTable.csv` que no tengan datos en SQL se les asignara un valor en el campo Active 0 y seran descartadas para la comparativa (cuadre) de tablas.
 Esto con el fin de evitar el uso de recursos innecesarios en tablas Vacias.
-
 
 # AutoCuadre SQL vs ICM
 `AutoCuadre` es un proyecto de Python que consulta la información de las tablas contenidas en el archivo 'cMappingTable.csv' en ICM como SQL.
@@ -19,7 +18,7 @@ Las diferencias se pueden categorizar en:
 4. Información general de las tablas de SQL e ICM.
 
 # Puntos a tener en cuenta
-* Para recibir los reportes SIN alteraciónes (es decir con los campos de procesamiento) debemos de ajustar el booleano [BOOL]['raw') en config.ini a True
+* Para recibir los reportes SIN alteraciónes (es decir con los campos de procesamiento) debemos de ajustar el booleano [BOOL]['raw'] en config.ini a True
 * El script `main.py` ejecuta `MapActiveCheck.py` pero este tambien puede ejecutarse manualmente.
 * El script `main.py` no modifica datos, solo hace consultas y genera reportes.
 * El script `MapActiveCheck.py` se ejecuta automaticamente cada 15 dias, esta periodicidad puede modificarse en el archivo config (Se recomienda no aumentar mucho la tolerancia de dias).
@@ -42,7 +41,6 @@ Para ejecutar este proyecto, necesitas tener instaladas las siguientes bibliotec
 * `pyodbc`
 * `requests`
 * `python-dotenv`
-
 
 Puedes instalarlas usando `pip`:
 
